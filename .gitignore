@@ -32,6 +32,11 @@ id_rsa*
 id_ed25519*
 *.pub
 
+# Developer documentation (internal)
+README-DEV.md
+DEV-*.md
+INTERNAL-*.md
+
 # IDE
 .vscode/
 .idea/

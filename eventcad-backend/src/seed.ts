@@ -13,13 +13,13 @@ async function bootstrap() {
   try {
     // Verificar se já existe um usuário admin
     const existingAdmin = await userRepository.findOne({
-      where: { email: 'admin@eventcad.com' }
+      where: { email: 'admin@eventcad.com' },
     });
-    
+
     if (!existingAdmin) {
       // Criar usuário admin
       const hashedPassword = await hash('EventCAD@2025', 10);
-      
+
       const adminUser = userRepository.create({
         fullName: 'Administrador EventCAD+',
         email: 'admin@eventcad.com',
@@ -37,9 +37,9 @@ async function bootstrap() {
           notifications: {
             email: true,
             push: true,
-            sms: false
-          }
-        }
+            sms: false,
+          },
+        },
       });
 
       await userRepository.save(adminUser);
@@ -52,12 +52,12 @@ async function bootstrap() {
 
     // Criar usuário demo
     const existingDemo = await userRepository.findOne({
-      where: { email: 'demo@eventcad.com' }
+      where: { email: 'demo@eventcad.com' },
     });
-    
+
     if (!existingDemo) {
       const hashedPassword = await hash('demo123', 10);
-      
+
       const demoUser = userRepository.create({
         fullName: 'Usuário Demo',
         email: 'demo@eventcad.com',
@@ -75,9 +75,9 @@ async function bootstrap() {
           notifications: {
             email: true,
             push: true,
-            sms: false
-          }
-        }
+            sms: false,
+          },
+        },
       });
 
       await userRepository.save(demoUser);
@@ -87,7 +87,6 @@ async function bootstrap() {
     } else {
       console.log('ℹ️ Usuário demo já existe!');
     }
-
   } catch (error) {
     console.error('❌ Erro ao criar usuários:', error);
   } finally {
@@ -95,4 +94,4 @@ async function bootstrap() {
   }
 }
 
-bootstrap(); 
+bootstrap();

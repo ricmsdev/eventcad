@@ -511,4 +511,20 @@ export class EventoController {
       rejeitados: results[2].data,
     };
   }
+
+  /**
+   * Dashboard de estatísticas gerais
+   */
+  @Get('dashboard/stats')
+  @ApiOperation({
+    summary: 'Dashboard de estatísticas',
+    description: 'Retorna estatísticas gerais para o dashboard',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estatísticas retornadas com sucesso',
+  })
+  async getDashboardStats(@CurrentTenant() tenantId: string) {
+    return this.eventoService.getDashboardStats(tenantId);
+  }
 }

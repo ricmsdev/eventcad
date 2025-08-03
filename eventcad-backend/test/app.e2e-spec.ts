@@ -1,9 +1,12 @@
+require('dotenv').config({ path: '.env.test' });
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { ConfigService } from '@nestjs/config';
+
+jest.setTimeout(30000);
 
 /**
  * Testes E2E principais da aplicação EventCAD+
@@ -18,6 +21,8 @@ describe('EventCAD+ (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
   let tenantId: string;
+  const plantaId: string = '';
+  const infraObjectId: string = '';
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({

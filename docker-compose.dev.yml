@@ -1,39 +1,109 @@
 version: '3.8'
 
-# Development overrides
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: eventcad-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-eventcad}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-eventcad123}
+      POSTGRES_DB: ${DB_NAME:-eventcad}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - eventcad-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-eventcad}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: eventcad-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - eventcad-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend NestJS API (Development Mode)
   backend:
     build:
       context: ./eventcad-backend
       dockerfile: Dockerfile.dev
-    volumes:
-      - ./eventcad-backend:/app
-      - /app/node_modules
+    container_name: eventcad-backend-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       NODE_ENV: development
-    command: npm run start:dev
+      PORT: ${BACKEND_PORT:-3000}
+      DATABASE_URL: postgresql://${DB_USER:-eventcad}:${DB_PASSWORD:-eventcad123}@postgres:5432/${DB_NAME:-eventcad}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
+      UPLOAD_PATH: /app/uploads
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-52428800}
+    volumes:
+      - uploads_data:/app/uploads
+      - ./eventcad-backend:/app
+      - /app/node_modules
     ports:
-      - "9229:9229" # Debug port
+      - "${BACKEND_PORT:-3000}:3000"
+    networks:
+      - eventcad-network
+    command: npm run start:dev
 
+  # Frontend React App (Development Mode)
   frontend:
     build:
       context: ./eventcad-frontend
       dockerfile: Dockerfile.dev
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    container_name: eventcad-frontend-dev
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
     volumes:
       - ./eventcad-frontend:/app
       - /app/node_modules
-    environment:
-      NODE_ENV: development
+    ports:
+      - "3001:3001"
+    networks:
+      - eventcad-network
     command: npm run dev
-    ports:
-      - "5173:5173" # Vite dev server
 
-  postgres:
-    ports:
-      - "5433:5432" # Different port to avoid conflicts
-    volumes:
-      - ./postgres-init:/docker-entrypoint-initdb.d
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local
 
-  redis:
-    ports:
-      - "6380:6379" # Different port to avoid conflicts
+networks:
+  eventcad-network:
+    driver: bridge

@@ -280,13 +280,13 @@ export class CreateAIJobs1704067200000 implements MigrationInterface {
     await queryRunner.query(`
       ALTER TABLE ai_jobs 
       ADD CONSTRAINT FK_ai_jobs_planta 
-      FOREIGN KEY (planta_id) REFERENCES plantas(id) ON DELETE CASCADE
+      FOREIGN KEY ("plantaId") REFERENCES plantas(id) ON DELETE CASCADE
     `);
 
     await queryRunner.query(`
       ALTER TABLE ai_jobs 
       ADD CONSTRAINT FK_ai_jobs_initiator 
-      FOREIGN KEY (initiated_by) REFERENCES users(id) ON DELETE SET NULL
+      FOREIGN KEY ("initiatedBy") REFERENCES users(id) ON DELETE SET NULL
     `);
 
     // Função para estatísticas de jobs de IA
@@ -357,38 +357,38 @@ export class CreateAIJobs1704067200000 implements MigrationInterface {
       CREATE VIEW v_ai_jobs_active AS
       SELECT 
         aj.id,
-        aj.job_name,
+        aj."jobName",
         aj.status,
-        aj.model_type,
+        aj."modelType",
         aj.priority,
         aj.progress,
-        aj.current_stage,
-        aj.created_at,
-        aj.started_at,
-        aj.completed_at,
-        aj.processing_time_seconds,
-        aj.attempt_count,
-        aj.max_attempts,
-        aj.tenant_id,
+        aj."currentStage",
+        aj."createdAt",
+        aj."startedAt",
+        aj."completedAt",
+        aj."processingTimeSeconds",
+        aj."attemptCount",
+        aj."maxAttempts",
+        aj."tenantId",
         p.original_name as planta_name,
         p.planta_tipo,
-        p.file_type as planta_file_type,
+        p.type as planta_file_type,
         u.email as initiator_email,
         CASE 
           WHEN aj.status = 'pending' OR aj.status = 'queued' THEN true
-          WHEN aj.status = 'failed' AND aj.attempt_count < aj.max_attempts 
-            AND (aj.next_retry_at IS NULL OR aj.next_retry_at <= CURRENT_TIMESTAMP) THEN true
+          WHEN aj.status = 'failed' AND aj."attemptCount" < aj."maxAttempts" 
+            AND (aj."nextRetryAt" IS NULL OR aj."nextRetryAt" <= CURRENT_TIMESTAMP) THEN true
           ELSE false
         END as can_execute,
         CASE 
-          WHEN aj.status = 'failed' AND aj.attempt_count < aj.max_attempts 
-            AND (aj.next_retry_at IS NULL OR aj.next_retry_at <= CURRENT_TIMESTAMP) THEN true
+          WHEN aj.status = 'failed' AND aj."attemptCount" < aj."maxAttempts" 
+            AND (aj."nextRetryAt" IS NULL OR aj."nextRetryAt" <= CURRENT_TIMESTAMP) THEN true
           ELSE false
         END as can_retry
       FROM ai_jobs aj
-      LEFT JOIN plantas p ON aj.planta_id = p.id
-      LEFT JOIN users u ON aj.initiated_by = u.id
-      WHERE aj.is_active = true;
+      LEFT JOIN plantas p ON aj."plantaId" = p.id
+      LEFT JOIN users u ON aj."initiatedBy" = u.id
+      WHERE aj."isActive" = true;
     `);
 
     // Função para limpeza de jobs antigos
@@ -431,12 +431,12 @@ export class CreateAIJobs1704067200000 implements MigrationInterface {
     // Comentários nas tabelas e colunas
     await queryRunner.query(`
       COMMENT ON TABLE ai_jobs IS 'Jobs de processamento de IA para plantas técnicas do EventCAD+';
-      COMMENT ON COLUMN ai_jobs.model_type IS 'Tipo do modelo: yolo_v8, detectron2, fire_safety_ai, etc.';
+      COMMENT ON COLUMN ai_jobs."modelType" IS 'Tipo do modelo: yolo_v8, detectron2, fire_safety_ai, etc.';
       COMMENT ON COLUMN ai_jobs.status IS 'Status: pending, queued, processing, completed, failed, cancelled, timeout, retrying';
       COMMENT ON COLUMN ai_jobs.priority IS 'Prioridade: 1=crítica, 2=alta, 3=média, 4=baixa';
       COMMENT ON COLUMN ai_jobs.results IS 'Resultados JSON com objetos detectados, texto extraído, análises, etc.';
-      COMMENT ON COLUMN ai_jobs.processing_log IS 'Log detalhado com timestamps, stages, messages e níveis';
-      COMMENT ON COLUMN ai_jobs.error_history IS 'Histórico de erros com tentativas, timestamps e contexto';
+      COMMENT ON COLUMN ai_jobs."processingLog" IS 'Log detalhado com timestamps, stages, messages e níveis';
+      COMMENT ON COLUMN ai_jobs."errorHistory" IS 'Histórico de erros com tentativas, timestamps e contexto';
     `);
 
     this.logger?.log(

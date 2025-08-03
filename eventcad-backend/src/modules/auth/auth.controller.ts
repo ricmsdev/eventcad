@@ -6,6 +6,7 @@ import {
   Request,
   Get,
   Patch,
+  Put,
   HttpCode,
   HttpStatus,
   Ip,
@@ -222,34 +223,18 @@ export class AuthController {
   }
 
   /**
-   * Endpoint de verificação de token
-   * Verifica se o token atual é válido
+   * Endpoint para verificar token
+   * Verifica se o token JWT é válido
    */
   @Get('verify')
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Verificação de token',
-    description:
-      'Verifica se o token atual é válido e retorna status do usuário',
+    summary: 'Verificar token',
+    description: 'Verifica se o token JWT é válido',
   })
   @ApiResponse({
     status: 200,
     description: 'Token válido',
-    schema: {
-      properties: {
-        valid: { type: 'boolean' },
-        user: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            email: { type: 'string' },
-            role: { type: 'string' },
-            tenantId: { type: 'string' },
-          },
-        },
-        expiresAt: { type: 'string', format: 'date-time' },
-      },
-    },
   })
   @ApiResponse({
     status: 401,
@@ -262,9 +247,100 @@ export class AuthController {
         id: user.id,
         email: user.email,
         role: user.role,
-        tenantId: user.tenantId,
       },
-      timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Endpoint para atualizar perfil do usuário
+   */
+  @Put('profile')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Atualizar perfil',
+    description: 'Atualiza informações do perfil do usuário',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil atualizado com sucesso',
+  })
+  async updateProfile(@CurrentUser() user: any, @Body() updateData: any) {
+    // return this.authService.updateProfile(user.id, updateData);
+    throw new Error('Not implemented: updateProfile');
+  }
+
+  /**
+   * Endpoint para alterar senha
+   */
+  @Put('password')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Alterar senha',
+    description: 'Altera a senha do usuário logado',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Senha alterada com sucesso',
+  })
+  async changePassword(@CurrentUser() user: any, @Body() passwordData: any) {
+    // return this.authService.changePassword(user.id, passwordData);
+    throw new Error('Not implemented: changePassword');
+  }
+
+  /**
+   * Endpoint para atualizar notificações
+   */
+  @Put('notifications')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Atualizar notificações',
+    description: 'Atualiza configurações de notificação do usuário',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notificações atualizadas com sucesso',
+  })
+  async updateNotifications(
+    @CurrentUser() user: any,
+    @Body() notificationData: any,
+  ) {
+    // return this.authService.updateNotifications(user.id, notificationData);
+    throw new Error('Not implemented: updateNotifications');
+  }
+
+  /**
+   * Endpoint para estatísticas do usuário
+   */
+  @Get('stats')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Estatísticas do usuário',
+    description: 'Retorna estatísticas do usuário logado',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estatísticas retornadas com sucesso',
+  })
+  async getUserStats(@CurrentUser() user: any) {
+    // return this.authService.getUserStats(user.id);
+    throw new Error('Not implemented: getUserStats');
+  }
+
+  /**
+   * Endpoint para atividade do usuário
+   */
+  @Get('activity')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Atividade do usuário',
+    description: 'Retorna histórico de atividade do usuário',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Atividade retornada com sucesso',
+  })
+  async getUserActivity(@CurrentUser() user: any) {
+    // return this.authService.getUserActivity(user.id);
+    throw new Error('Not implemented: getUserActivity');
   }
 }

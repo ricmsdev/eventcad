@@ -4,8 +4,8 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * Migração para criação da tabela de eventos
  * Inclui todas as funcionalidades do módulo de eventos do EventCAD+
  */
-export class CreateEventos1707360000002 implements MigrationInterface {
-  name = 'CreateEventos1707360000002';
+export class CreateEventos1704067000000 implements MigrationInterface {
+  name = 'CreateEventos1704067000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Criar tipos ENUM para eventos

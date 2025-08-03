@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { seedDefaultTenant } from './001-default-tenant';
 import { seedAdminUser } from './002-admin-user';
+import dataSource from '../../config/database.config';
 
 /**
  * Executor principal dos seeds do EventCAD+
@@ -30,21 +31,6 @@ export async function runSeeds(dataSource: DataSource): Promise<void> {
  * Uso: npm run seed
  */
 export async function runSeedsStandalone(): Promise<void> {
-  const { DataSource } = await import('typeorm');
-
-  // Configuração simples para seeds
-  const dataSource = new DataSource({
-    type: 'postgres',
-    host: process.env.DATABASE_HOST || 'localhost',
-    port: parseInt(process.env.DATABASE_PORT || '5432'),
-    username: process.env.DATABASE_USERNAME || 'eventcad_user',
-    password: process.env.DATABASE_PASSWORD || 'eventcad_password',
-    database: process.env.DATABASE_NAME || 'eventcad_db',
-    entities: [__dirname + '/../../**/*.entity{.ts,.js}'],
-    synchronize: false,
-    logging: true,
-  });
-
   try {
     await dataSource.initialize();
     console.log('🔗 Conectado ao banco de dados');

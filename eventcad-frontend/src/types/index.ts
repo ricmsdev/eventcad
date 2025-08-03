@@ -41,7 +41,7 @@ export interface Evento {
   endereco?: string;
   area?: number;
   capacidadeMaxima?: number;
-  publicoEstimado: number;
+  publicoEsperado: number;
   observacoes?: string;
   status: EventStatus;
   tenantId: string;
@@ -217,21 +217,63 @@ export enum UserRole {
 }
 
 export enum EventoTipo {
-  FEIRA = 'feira',
+  // Eventos comerciais
+  FEIRA_COMERCIAL = 'feira_comercial',
+  EXPOSICAO = 'exposicao',
   CONGRESSO = 'congresso',
+  SEMINARIO = 'seminario',
+  WORKSHOP = 'workshop',
+
+  // Eventos corporativos
+  CONVENCAO = 'convencao',
+  LANCAMENTO = 'lancamento',
+  REUNIAO_CORPORATIVA = 'reuniao_corporativa',
+  TREINAMENTO = 'treinamento',
+
+  // Eventos sociais
+  CASAMENTO = 'casamento',
+  FESTA_PRIVADA = 'festa_privada',
+  FORMATURA = 'formatura',
+  ANIVERSARIO = 'aniversario',
+
+  // Eventos culturais
   SHOW = 'show',
-  ESPORTE = 'esporte',
-  CORPORATIVO = 'corporativo',
-  CULTURAL = 'cultural'
+  CONCERTO = 'concerto',
+  FESTIVAL = 'festival',
+  TEATRO = 'teatro',
+  CINEMA = 'cinema',
+
+  // Eventos esportivos
+  COMPETICAO = 'competicao',
+  TORNEIO = 'torneio',
+  JOGO = 'jogo',
+  CORRIDA = 'corrida',
+
+  // Eventos especiais
+  CONFERENCIA = 'conferencia',
+  SUMMIT = 'summit',
+  HACKATHON = 'hackathon',
+  STARTUP_PITCH = 'startup_pitch',
+
+  // Outros
+  PERSONALIZADO = 'personalizado',
 }
 
 export enum EventStatus {
-  PLANEJAMENTO = 'planejamento',
-  PENDING_APPROVAL = 'pending_approval',
-  APROVADO = 'approved',
-  EM_EXECUCAO = 'em_execucao',
-  CONCLUIDO = 'concluido',
-  CANCELADO = 'cancelado'
+  DRAFT = 'draft',
+  PLANNING = 'planning',
+  AWAITING_APPROVAL = 'awaiting_approval',
+  UNDER_REVIEW = 'under_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  PREPARING = 'preparing',
+  READY = 'ready',
+  ONGOING = 'ongoing',
+  PAUSED = 'paused',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  FAILED = 'failed',
+  ARCHIVED = 'archived'
 }
 
 export enum PlantaTipo {
@@ -320,7 +362,7 @@ export enum CriticalityLevel {
 
 export enum ObjectStatus {
   PENDING_REVIEW = 'pending_review',
-  PENDING_APPROVAL = 'pending_approval',
+  AWAITING_APPROVAL = 'awaiting_approval',
   APPROVED = 'approved',
   REJECTED = 'rejected',
   NEEDS_REVISION = 'needs_revision'
@@ -393,7 +435,7 @@ export interface CreateEventoForm {
   tipo: EventoTipo;
   dataInicio: string;
   dataFim: string;
-  publicoEstimado: number;
+  publicoEsperado: number;
 }
 
 export interface CreateInfraObjectForm {

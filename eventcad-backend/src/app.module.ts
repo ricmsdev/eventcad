@@ -14,6 +14,7 @@ import { AIRecognitionModule } from './modules/ai-recognition/ai-recognition.mod
 import { InfraObjectModule } from './modules/infra-object/infra-object.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 /**
  * Módulo principal da aplicação EventCAD+
@@ -29,14 +30,17 @@ import { RolesGuard } from './common/guards/roles.guard';
     // Configuração do banco de dados
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DATABASE_HOST || 'postgres',
+      host:
+        process.env.NODE_ENV === 'test'
+          ? 'localhost'
+          : process.env.DATABASE_HOST || 'localhost',
       port: parseInt(process.env.DATABASE_PORT || '5432'),
       username: process.env.DATABASE_USERNAME || 'eventcad_user',
       password: process.env.DATABASE_PASSWORD || 'eventcad_password',
       database: process.env.DATABASE_NAME || 'eventcad_db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'] as string[],
       migrations: [__dirname + '/database/migrations/*{.ts,.js}'] as string[],
-      synchronize: true,
+      synchronize: process.env.NODE_ENV === 'test' ? false : true,
       logging: true,
       ssl: false,
       retryAttempts: 3,
@@ -48,6 +52,7 @@ import { RolesGuard } from './common/guards/roles.guard';
         acquireTimeoutMillis: 60000,
         idleTimeoutMillis: 600000,
       },
+      namingStrategy: new SnakeNamingStrategy(),
     }),
 
     // Rate limiting para proteção

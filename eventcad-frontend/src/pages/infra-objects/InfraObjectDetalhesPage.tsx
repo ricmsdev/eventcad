@@ -28,7 +28,7 @@ import { ptBR } from 'date-fns/locale';
 
 const statusConfig = {
   draft: { label: 'Rascunho', color: 'bg-gray-100 text-gray-800', icon: Edit },
-  pending_approval: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  awaiting_approval: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   pending_review: { label: 'Em Revisão', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   approved: { label: 'Aprovado', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   rejected: { label: 'Rejeitado', color: 'bg-red-100 text-red-800', icon: XCircle },
@@ -344,7 +344,7 @@ export function InfraObjectDetalhesPage() {
             </h4>
 
             <div className="space-y-2">
-              {infraObject.status === 'pending_approval' && (
+              {infraObject.status === 'awaiting_approval' && (
                 <>
                   <button
                     onClick={() => handleStatusChange('approved' as ObjectStatus)}

@@ -12,11 +12,17 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+    host: '0.0.0.0', // Aceita conexões externas
+    strictPort: true, // Força o uso da porta especificada
+    watch: {
+      usePolling: true, // Usa polling para detectar mudanças
+    },
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://backend:3000',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
       },
     },
   },

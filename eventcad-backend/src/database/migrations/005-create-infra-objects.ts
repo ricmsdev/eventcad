@@ -491,43 +491,43 @@ export class CreateInfraObjects1704067300000 implements MigrationInterface {
     // View para objetos com problemas
     await queryRunner.query(`
       CREATE VIEW v_infra_objects_needs_attention AS
-      SELECT 
+      SELECT
         io.id,
         io.name,
-        io.object_category,
-        io.object_type,
+        io."objectCategory",
+        io."objectType",
         io.status,
         io.criticality,
         io.confidence,
-        io.requires_review,
-        io.manually_validated,
-        io.planta_id,
-        io.tenant_id,
-        io.created_at,
+        io."requiresReview",
+        io."manuallyValidated",
+        io."plantaId",
+        io."tenantId",
+        io."createdAt",
         p.original_name as planta_name,
         u.email as creator_email,
-        CASE 
+        CASE
           WHEN io.status = 'pending_review' THEN 'Aguardando revisão'
           WHEN io.status = 'conflicted' THEN 'Com conflitos'
-          WHEN io.requires_review = true THEN 'Requer validação manual'
-          WHEN io.conflicts IS NOT NULL THEN 'Tem conflitos detectados'
+          WHEN io."requiresReview" = true THEN 'Requer validação manual'
+          WHEN io."conflicts" IS NOT NULL THEN 'Tem conflitos detectados'
           WHEN io.confidence IS NOT NULL AND io.confidence < 0.7 THEN 'Baixa confiança'
           ELSE 'Outros problemas'
         END as attention_reason,
-        CASE 
+        CASE
           WHEN io.criticality = 'critical' THEN 1
           WHEN io.criticality = 'high' THEN 2
           WHEN io.criticality = 'medium' THEN 3
           ELSE 4
         END as priority_order
       FROM infra_objects io
-      LEFT JOIN plantas p ON io.planta_id = p.id
-      LEFT JOIN users u ON io.created_by = u.id
-      WHERE io.is_active = true
+      LEFT JOIN plantas p ON io."plantaId" = p.id
+      LEFT JOIN users u ON io."createdBy" = u.id
+      WHERE io."isActive" = true
         AND (
           io.status IN ('pending_review', 'conflicted') OR
-          io.requires_review = true OR
-          io.conflicts IS NOT NULL OR
+          io."requiresReview" = true OR
+          io."conflicts" IS NOT NULL OR
           (io.confidence IS NOT NULL AND io.confidence < 0.7)
         );
     `);
@@ -572,18 +572,18 @@ export class CreateInfraObjects1704067300000 implements MigrationInterface {
     // Comentários nas tabelas e colunas
     await queryRunner.query(`
       COMMENT ON TABLE infra_objects IS 'Objetos de infraestrutura detectados por IA ou criados manualmente no EventCAD+';
-      COMMENT ON COLUMN infra_objects.object_category IS 'ARCHITECTURAL, FIRE_SAFETY, ELECTRICAL, PLUMBING, ACCESSIBILITY, FURNITURE, ANNOTATIONS';
-      COMMENT ON COLUMN infra_objects.object_type IS 'DOOR, FIRE_EXTINGUISHER, OUTLET, TOILET, ACCESSIBLE_RAMP, TABLE, DIMENSION, etc.';
+      COMMENT ON COLUMN infra_objects."objectCategory" IS 'ARCHITECTURAL, FIRE_SAFETY, ELECTRICAL, PLUMBING, ACCESSIBILITY, FURNITURE, ANNOTATIONS';
+      COMMENT ON COLUMN infra_objects."objectType" IS 'DOOR, FIRE_EXTINGUISHER, OUTLET, TOILET, ACCESSIBLE_RAMP, TABLE, DIMENSION, etc.';
       COMMENT ON COLUMN infra_objects.status IS 'detected, pending_review, under_review, approved, rejected, modified, conflicted, archived';
       COMMENT ON COLUMN infra_objects.source IS 'ai_detection, manual_creation, imported, template, duplicated';
       COMMENT ON COLUMN infra_objects.criticality IS 'none, low, medium, high, critical';
       COMMENT ON COLUMN infra_objects.geometry IS 'JSONB com boundingBox, center, rotation, points, area, etc.';
       COMMENT ON COLUMN infra_objects.properties IS 'Propriedades específicas do tipo de objeto (capacity, material, etc.)';
-      COMMENT ON COLUMN infra_objects.validation_results IS 'Resultados de validações técnicas especializadas';
-      COMMENT ON COLUMN infra_objects.modification_history IS 'Histórico completo de modificações com timestamps';
-      COMMENT ON COLUMN infra_objects.conflicts IS 'Conflitos detectados (duplicates, overlaps, inconsistencies)';
-      COMMENT ON COLUMN infra_objects.annotations IS 'Anotações e comentários dos usuários';
-      COMMENT ON COLUMN infra_objects.compliance_checks IS 'Verificações de conformidade com normas';
+      COMMENT ON COLUMN infra_objects."validationResults" IS 'Resultados de validações técnicas especializadas';
+      COMMENT ON COLUMN infra_objects."modificationHistory" IS 'Histórico completo de modificações com timestamps';
+      COMMENT ON COLUMN infra_objects."conflicts" IS 'Conflitos detectados (duplicates, overlaps, inconsistencies)';
+      COMMENT ON COLUMN infra_objects."annotations" IS 'Anotações e comentários dos usuários';
+      COMMENT ON COLUMN infra_objects."complianceChecks" IS 'Verificações de conformidade com normas';
     `);
 
     this.logger?.log(

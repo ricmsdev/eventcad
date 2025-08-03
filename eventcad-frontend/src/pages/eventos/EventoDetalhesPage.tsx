@@ -18,30 +18,59 @@ import {
   Download
 } from 'lucide-react';
 import { apiService } from '@/services/api';
-import { EventStatus } from '@/types';
+import { EventStatus, EventoTipo } from '@/types';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { cn } from '@/utils/cn';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const statusConfig = {
-  planejamento: { label: 'Planejamento', color: 'bg-gray-100 text-gray-800', icon: Edit },
-  pending_approval: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  approved: { label: 'Aprovado', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  em_execucao: { label: 'Em Execução', color: 'bg-blue-100 text-blue-800', icon: Activity },
-  concluido: { label: 'Concluído', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  cancelado: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle }
-} as const;
+const statusConfig: Record<EventStatus, { label: string; color: string; icon: any }> = {
+  [EventStatus.DRAFT]: { label: 'Rascunho', color: 'bg-gray-100 text-gray-800', icon: Edit },
+  [EventStatus.PLANNING]: { label: 'Planejamento', color: 'bg-gray-100 text-gray-800', icon: Edit },
+  [EventStatus.AWAITING_APPROVAL]: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  [EventStatus.UNDER_REVIEW]: { label: 'Em Revisão', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.APPROVED]: { label: 'Aprovado', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  [EventStatus.REJECTED]: { label: 'Rejeitado', color: 'bg-red-100 text-red-800', icon: XCircle },
+  [EventStatus.PREPARING]: { label: 'Preparando', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.READY]: { label: 'Pronto', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.ONGOING]: { label: 'Em Execução', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.PAUSED]: { label: 'Pausado', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  [EventStatus.COMPLETED]: { label: 'Concluído', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  [EventStatus.CANCELLED]: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle },
+  [EventStatus.FAILED]: { label: 'Falhou', color: 'bg-red-100 text-red-800', icon: XCircle },
+  [EventStatus.ARCHIVED]: { label: 'Arquivado', color: 'bg-gray-300 text-gray-700', icon: Edit },
+};
 
-const tipoEventoLabels = {
-  feira: 'Feira',
-  congresso: 'Congresso',
-  show: 'Show',
-  esporte: 'Esporte',
-  corporativo: 'Corporativo',
-  cultural: 'Cultural'
-} as const;
+const tipoEventoLabels: Record<EventoTipo, string> = {
+  [EventoTipo.FEIRA_COMERCIAL]: 'Feira Comercial',
+  [EventoTipo.EXPOSICAO]: 'Exposição',
+  [EventoTipo.CONGRESSO]: 'Congresso',
+  [EventoTipo.SEMINARIO]: 'Seminário',
+  [EventoTipo.WORKSHOP]: 'Workshop',
+  [EventoTipo.CONVENCAO]: 'Convenção',
+  [EventoTipo.LANCAMENTO]: 'Lançamento',
+  [EventoTipo.REUNIAO_CORPORATIVA]: 'Reunião Corporativa',
+  [EventoTipo.TREINAMENTO]: 'Treinamento',
+  [EventoTipo.CASAMENTO]: 'Casamento',
+  [EventoTipo.FESTA_PRIVADA]: 'Festa Privada',
+  [EventoTipo.FORMATURA]: 'Formatura',
+  [EventoTipo.ANIVERSARIO]: 'Aniversário',
+  [EventoTipo.SHOW]: 'Show',
+  [EventoTipo.CONCERTO]: 'Concerto',
+  [EventoTipo.FESTIVAL]: 'Festival',
+  [EventoTipo.TEATRO]: 'Teatro',
+  [EventoTipo.CINEMA]: 'Cinema',
+  [EventoTipo.COMPETICAO]: 'Competição',
+  [EventoTipo.TORNEIO]: 'Torneio',
+  [EventoTipo.JOGO]: 'Jogo',
+  [EventoTipo.CORRIDA]: 'Corrida',
+  [EventoTipo.CONFERENCIA]: 'Conferência',
+  [EventoTipo.SUMMIT]: 'Summit',
+  [EventoTipo.HACKATHON]: 'Hackathon',
+  [EventoTipo.STARTUP_PITCH]: 'Startup Pitch',
+  [EventoTipo.PERSONALIZADO]: 'Personalizado',
+};
 
 export function EventoDetalhesPage() {
   const { id } = useParams<{ id: string }>();
@@ -116,7 +145,7 @@ export function EventoDetalhesPage() {
     );
   }
 
-  const statusInfo = statusConfig[evento.status];
+  const statusInfo = statusConfig[evento.status as EventStatus];
   const StatusIcon = statusInfo.icon;
 
   const handleDeleteConfirm = () => {
@@ -128,22 +157,22 @@ export function EventoDetalhesPage() {
     const actions: { label: string; status: EventStatus; variant: 'primary' | 'success' | 'danger' }[] = [];
     
     switch (currentStatus) {
-      case EventStatus.PLANEJAMENTO:
-        actions.push({ label: 'Enviar para Aprovação', status: EventStatus.PENDING_APPROVAL, variant: 'primary' });
+      case EventStatus.PLANNING:
+        actions.push({ label: 'Enviar para Aprovação', status: EventStatus.AWAITING_APPROVAL, variant: 'primary' });
         break;
-      case EventStatus.PENDING_APPROVAL:
+      case EventStatus.AWAITING_APPROVAL:
         actions.push(
-          { label: 'Aprovar', status: EventStatus.APROVADO, variant: 'success' },
-          { label: 'Rejeitar', status: EventStatus.CANCELADO, variant: 'danger' }
+          { label: 'Aprovar', status: EventStatus.APPROVED, variant: 'success' },
+          { label: 'Rejeitar', status: EventStatus.CANCELLED, variant: 'danger' }
         );
         break;
-      case EventStatus.APROVADO:
-        actions.push({ label: 'Iniciar Execução', status: EventStatus.EM_EXECUCAO, variant: 'primary' });
+      case EventStatus.APPROVED:
+        actions.push({ label: 'Iniciar Execução', status: EventStatus.ONGOING, variant: 'primary' });
         break;
-      case EventStatus.EM_EXECUCAO:
+      case EventStatus.ONGOING:
         actions.push(
-          { label: 'Finalizar Evento', status: EventStatus.CONCLUIDO, variant: 'success' },
-          { label: 'Cancelar Evento', status: EventStatus.CANCELADO, variant: 'danger' }
+          { label: 'Finalizar Evento', status: EventStatus.COMPLETED, variant: 'success' },
+          { label: 'Cancelar Evento', status: EventStatus.CANCELLED, variant: 'danger' }
         );
         break;
     }
@@ -279,15 +308,14 @@ export function EventoDetalhesPage() {
                     <span className="font-medium">Máxima:</span>{' '}
                     {evento.capacidadeMaxima?.toLocaleString()} pessoas
                   </div>
-                  {evento.publicoEstimado && (
-                    <div>
-                      <span className="font-medium">Estimado:</span>{' '}
-                      {evento.publicoEstimado.toLocaleString()} pessoas
+                  {evento.publicoEsperado && (
+                    <div className="text-sm text-gray-600">
+                      {evento.publicoEsperado.toLocaleString()} pessoas
                     </div>
                   )}
-                  {evento.capacidadeMaxima && evento.publicoEstimado && (
-                    <div className="text-gray-600">
-                      Ocupação: {Math.round((evento.publicoEstimado / evento.capacidadeMaxima) * 100)}%
+                  {evento.capacidadeMaxima && evento.publicoEsperado && (
+                    <div className="text-xs text-gray-500">
+                      Ocupação: {Math.round((evento.publicoEsperado / evento.capacidadeMaxima) * 100)}%
                     </div>
                   )}
                 </div>
@@ -462,7 +490,7 @@ export function EventoDetalhesPage() {
             <div className="space-y-3">
               {[
                 { status: 'draft', label: 'Rascunho' },
-                { status: 'pending_approval', label: 'Aguardando Aprovação' },
+                { status: 'awaiting_approval', label: 'Aguardando Aprovação' },
                 { status: 'approved', label: 'Aprovado' },
                 { status: 'preparing', label: 'Preparando' },
                 { status: 'ready', label: 'Pronto' },

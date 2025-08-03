@@ -1,16 +1,15 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
- * Migração inicial do EventCAD+
- * Cria as tabelas básicas necessárias para o funcionamento do sistema
+ * Migration inicial para criação das tabelas base do sistema
+ * Inclui a criação da tabela 'users' e outras tabelas fundamentais
  */
-export class InitialSetup1707350000001 implements MigrationInterface {
-  name = 'InitialSetup1707350000001';
+export class InitialSetup1704066900000 implements MigrationInterface {
+  name = 'InitialSetup1704066900000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Criar extensões necessárias
     await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
-    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "inet"`);
 
     // Criar tipos ENUM
     await queryRunner.query(`

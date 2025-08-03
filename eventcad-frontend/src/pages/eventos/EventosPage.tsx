@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -27,24 +27,54 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { cn } from '@/utils/cn';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 
-const statusConfig = {
-  planejamento: { label: 'Planejamento', color: 'bg-gray-100 text-gray-800', icon: Edit },
-  pending_approval: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-  approved: { label: 'Aprovado', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  em_execucao: { label: 'Em Execução', color: 'bg-blue-100 text-blue-800', icon: Activity },
-  concluido: { label: 'Concluído', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-  cancelado: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle }
-} as const;
+const statusConfig: Record<EventStatus, { label: string; color: string; icon: any }> = {
+  [EventStatus.DRAFT]: { label: 'Rascunho', color: 'bg-gray-100 text-gray-800', icon: Edit },
+  [EventStatus.PLANNING]: { label: 'Planejamento', color: 'bg-gray-100 text-gray-800', icon: Edit },
+  [EventStatus.AWAITING_APPROVAL]: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  [EventStatus.UNDER_REVIEW]: { label: 'Em Revisão', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.APPROVED]: { label: 'Aprovado', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  [EventStatus.REJECTED]: { label: 'Rejeitado', color: 'bg-red-100 text-red-800', icon: XCircle },
+  [EventStatus.PREPARING]: { label: 'Preparando', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.READY]: { label: 'Pronto', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.ONGOING]: { label: 'Em Execução', color: 'bg-blue-100 text-blue-800', icon: Activity },
+  [EventStatus.PAUSED]: { label: 'Pausado', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  [EventStatus.COMPLETED]: { label: 'Concluído', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+  [EventStatus.CANCELLED]: { label: 'Cancelado', color: 'bg-red-100 text-red-800', icon: XCircle },
+  [EventStatus.FAILED]: { label: 'Falhou', color: 'bg-red-100 text-red-800', icon: XCircle },
+  [EventStatus.ARCHIVED]: { label: 'Arquivado', color: 'bg-gray-300 text-gray-700', icon: Edit },
+};
 
-const tipoEventoLabels = {
-  feira: 'Feira',
-  congresso: 'Congresso',
-  show: 'Show',
-  esporte: 'Esporte',
-  corporativo: 'Corporativo',
-  cultural: 'Cultural'
-} as const;
+const tipoEventoLabels: Record<EventoTipo, string> = {
+  [EventoTipo.FEIRA_COMERCIAL]: 'Feira Comercial',
+  [EventoTipo.EXPOSICAO]: 'Exposição',
+  [EventoTipo.CONGRESSO]: 'Congresso',
+  [EventoTipo.SEMINARIO]: 'Seminário',
+  [EventoTipo.WORKSHOP]: 'Workshop',
+  [EventoTipo.CONVENCAO]: 'Convenção',
+  [EventoTipo.LANCAMENTO]: 'Lançamento',
+  [EventoTipo.REUNIAO_CORPORATIVA]: 'Reunião Corporativa',
+  [EventoTipo.TREINAMENTO]: 'Treinamento',
+  [EventoTipo.CASAMENTO]: 'Casamento',
+  [EventoTipo.FESTA_PRIVADA]: 'Festa Privada',
+  [EventoTipo.FORMATURA]: 'Formatura',
+  [EventoTipo.ANIVERSARIO]: 'Aniversário',
+  [EventoTipo.SHOW]: 'Show',
+  [EventoTipo.CONCERTO]: 'Concerto',
+  [EventoTipo.FESTIVAL]: 'Festival',
+  [EventoTipo.TEATRO]: 'Teatro',
+  [EventoTipo.CINEMA]: 'Cinema',
+  [EventoTipo.COMPETICAO]: 'Competição',
+  [EventoTipo.TORNEIO]: 'Torneio',
+  [EventoTipo.JOGO]: 'Jogo',
+  [EventoTipo.CORRIDA]: 'Corrida',
+  [EventoTipo.CONFERENCIA]: 'Conferência',
+  [EventoTipo.SUMMIT]: 'Summit',
+  [EventoTipo.HACKATHON]: 'Hackathon',
+  [EventoTipo.STARTUP_PITCH]: 'Startup Pitch',
+  [EventoTipo.PERSONALIZADO]: 'Personalizado',
+};
 
 interface EventosFilters {
   search: string;
@@ -77,6 +107,20 @@ export function EventosPage() {
       dataInicio: filters.dataInicio || undefined,
       dataFim: filters.dataFim || undefined
     }).then(res => res.data)
+  });
+
+  const queryClient = useQueryClient();
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const deleteEventoMutation = useMutation({
+    mutationFn: (id: string) => apiService.deleteEvento(id),
+    onSuccess: () => {
+      toast.success('Evento excluído com sucesso!');
+      setDeleteId(null);
+      queryClient.invalidateQueries({ queryKey: ['eventos'] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Erro ao excluir evento');
+    },
   });
 
   const handleFilterChange = (key: keyof EventosFilters, value: string) => {
@@ -180,7 +224,7 @@ export function EventosPage() {
               <Zap className="h-6 w-6 text-eventcad-200" />
               <div>
                 <p className="text-eventcad-200 text-sm">Em Execução</p>
-                <p className="text-2xl font-bold">{eventos?.data?.filter(e => e.status === 'em_execucao').length || 0}</p>
+                <p className="text-2xl font-bold">{eventos?.data?.filter(e => e.status === EventStatus.ONGOING).length || 0}</p>
               </div>
             </div>
           </div>
@@ -189,7 +233,7 @@ export function EventosPage() {
               <Sparkles className="h-6 w-6 text-eventcad-200" />
               <div>
                 <p className="text-eventcad-200 text-sm">Aprovados</p>
-                <p className="text-2xl font-bold">{eventos?.data?.filter(e => e.status === 'approved').length || 0}</p>
+                <p className="text-2xl font-bold">{eventos?.data?.filter(e => e.status === EventStatus.APPROVED).length || 0}</p>
               </div>
             </div>
           </div>
@@ -328,7 +372,7 @@ export function EventosPage() {
           ) : (
             <div className="grid gap-4">
               {eventos.data.map((evento) => {
-                const statusInfo = statusConfig[evento.status];
+                const statusInfo = statusConfig[evento.status as EventStatus];
                 const StatusIcon = statusInfo.icon;
                 
                 return (
@@ -380,10 +424,10 @@ export function EventosPage() {
                           <span className="badge-eventcad">
                             {tipoEventoLabels[evento.tipo]}
                           </span>
-                          {evento.publicoEstimado && (
-                            <span className="text-xs text-gray-500">
-                              ~{evento.publicoEstimado.toLocaleString()} participantes
-                            </span>
+                          {evento.publicoEsperado && (
+                            <div className="text-sm text-gray-600">
+                              ~{evento.publicoEsperado.toLocaleString()} participantes
+                            </div>
                           )}
                         </div>
                       </div>
@@ -404,7 +448,10 @@ export function EventosPage() {
                           <Edit className="h-4 w-4" />
                           Editar
                         </Link>
-                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+                        <button
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                          onClick={() => setDeleteId(evento.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                           Excluir
                         </button>
@@ -440,6 +487,37 @@ export function EventosPage() {
               </button>
             </div>
           )}
+        </div>
+      )}
+      {/* Modal de confirmação de exclusão */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Excluir Evento</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => deleteEventoMutation.mutate(deleteId)}
+                disabled={deleteEventoMutation.isPending}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {deleteEventoMutation.isPending ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </motion.div>

@@ -29,6 +29,12 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { PlantaTipo } from '@/types';
+import { apiService } from '@/services/api';
+
+const isValidUUID = (str: string) => {
+  // Regex simples para UUID v4
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+};
 
 // Schema de validação para upload de plantas
 const uploadPlantaSchema = z.object({
@@ -183,16 +189,28 @@ export function UploadPlantaPage() {
       return;
     }
 
+    // Validação Lucifer Mode
+    let eventoIdToSend = '';
+    if (data.eventoId && isValidUUID(data.eventoId)) {
+      eventoIdToSend = data.eventoId;
+    } else if (data.eventoId && !isValidUUID(data.eventoId)) {
+      toast.error('O evento selecionado não é um UUID válido. Selecione um evento válido.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // TODO: Implementar upload das plantas
-      console.log('Dados do upload:', data);
-      console.log('Arquivos:', uploadedFiles);
-      
+      for (const fileObj of uploadedFiles) {
+        await apiService.uploadPlanta(
+          eventoIdToSend,
+          data.plantaTipo,
+          fileObj.file
+        );
+      }
       toast.success('Plantas enviadas com sucesso!');
       navigate('/plantas');
-    } catch (error) {
-      toast.error('Erro ao enviar plantas');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Erro ao enviar plantas');
     } finally {
       setIsLoading(false);
     }

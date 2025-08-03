@@ -22,7 +22,7 @@ import { cn } from '@/utils/cn';
 
 const statusConfig = {
   pending_review: { label: 'Pendente Revisão', color: 'bg-gray-100 text-gray-800', icon: Edit },
-  pending_approval: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  awaiting_approval: { label: 'Aguardando Aprovação', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
   approved: { label: 'Aprovado', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   rejected: { label: 'Rejeitado', color: 'bg-red-100 text-red-800', icon: XCircle },
   needs_revision: { label: 'Precisa Revisão', color: 'bg-orange-100 text-orange-800', icon: AlertTriangle }

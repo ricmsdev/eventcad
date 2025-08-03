@@ -18,6 +18,7 @@ import { EventoDetalhesPage } from '@/pages/eventos/EventoDetalhesPage';
 import { PlantasPage } from '@/pages/plantas/PlantasPage';
 import { UploadPlantaPage } from '@/pages/plantas/UploadPlantaPage';
 import { PlantaDetalhesPage } from '@/pages/plantas/PlantaDetalhesPage';
+import PlantaEditorPage from '@/pages/plantas/PlantaEditorPage';
 import { InfraObjectsPage } from '@/pages/infra-objects/InfraObjectsPage';
 import { NovoInfraObjectPage } from '@/pages/infra-objects/NovoInfraObjectPage';
 import { InfraObjectDetalhesPage } from '@/pages/infra-objects/InfraObjectDetalhesPage';
@@ -201,6 +202,17 @@ function App() {
               <DashboardLayout>
                 <PlantaDetalhesPage />
               </DashboardLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/plantas/:id/editor"
+          element={
+            isAuthenticated ? (
+              <PlantaEditorPage />
             ) : (
               <Navigate to="/login" replace />
             )

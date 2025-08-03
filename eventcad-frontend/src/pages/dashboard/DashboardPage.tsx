@@ -39,7 +39,7 @@ export default function DashboardPage() {
     queryKey: ['eventos-atencao'],
     queryFn: () => apiService.getEventos({ 
       limit: 5, 
-      status: 'pending_approval' as EventStatus
+      status: 'awaiting_approval' as EventStatus
     }).then(res => res.data.data),
   });
 
@@ -142,8 +142,8 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    evento.status === EventStatus.APROVADO ? 'bg-green-100 text-green-800' :
-                    evento.status === 'planejamento' ? 'bg-yellow-100 text-yellow-800' :
+                    evento.status === EventStatus.APPROVED ? 'bg-green-100 text-green-800' :
+                    evento.status === EventStatus.PLANNING ? 'bg-yellow-100 text-yellow-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {evento.status}
@@ -169,7 +169,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="font-medium text-gray-900">{evento.nome}</p>
                     <p className="text-sm text-warning-700">
-                      {evento.publicoEstimado} pessoas estimadas
+                      {evento.publicoEsperado} pessoas estimadas
                     </p>
                   </div>
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-warning-100 text-warning-800">

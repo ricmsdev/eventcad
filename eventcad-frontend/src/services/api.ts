@@ -89,7 +89,7 @@ class ApiService {
   }
 
   async changePassword(data: any): Promise<AxiosResponse<any>> {
-    return this.api.put('/auth/change-password', data);
+    return this.api.put('/auth/password', data);
   }
 
   async updateNotifications(data: any): Promise<AxiosResponse<any>> {
@@ -409,7 +409,7 @@ class ApiService {
 
   // Dashboard e Estatísticas
   async getDashboardStats(): Promise<AxiosResponse<DashboardStats>> {
-    return this.api.get('/dashboard/stats');
+    return this.api.get('/eventos/dashboard/stats');
   }
 
   // Health Check

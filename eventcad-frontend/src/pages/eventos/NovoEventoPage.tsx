@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import {
@@ -21,6 +22,7 @@ import {
   Save
 } from 'lucide-react';
 import { EventoTipo } from '@/types';
+import { apiService } from '@/services/api';
 
 // Schema de validação robusto
 const eventoSchema = z.object({
@@ -75,19 +77,22 @@ const eventoSchema = z.object({
 type EventoFormData = z.infer<typeof eventoSchema>;
 
 export function NovoEventoPage() {
+  const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const isEditMode = Boolean(id);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<EventoFormData>({
     resolver: zodResolver(eventoSchema),
     defaultValues: {
-      tipo: EventoTipo.FEIRA,
+      tipo: EventoTipo.FEIRA_COMERCIAL,
       aguaRequerida: false,
       esgoto: false,
       arCondicionado: false,
@@ -99,19 +104,93 @@ export function NovoEventoPage() {
     },
   });
 
+  // Carregar dados do evento se for edição
+  useEffect(() => {
+    if (isEditMode && id) {
+      setIsLoading(true);
+      apiService.getEvento(id)
+        .then(res => {
+          const evento = res.data;
+          reset({
+            nome: evento.nome,
+            descricao: evento.descricao,
+            tipo: evento.tipo,
+            dataInicio: evento.dataInicio,
+            dataFim: evento.dataFim,
+            local: evento.local,
+            endereco: evento.endereco,
+            capacidadeMaxima: evento.capacidadeMaxima,
+            publicoEsperado: evento.publicoEsperado,
+            observacoes: evento.observacoes,
+            // Os demais campos do formulário ficam em branco
+          });
+        })
+        .catch(() => {
+          toast.error('Erro ao carregar evento para edição');
+          navigate('/eventos');
+        })
+        .finally(() => setIsLoading(false));
+    }
+  }, [isEditMode, id, reset, navigate]);
+
   const onSubmit = async (data: EventoFormData) => {
     setIsLoading(true);
     try {
-      // TODO: Implementar criação do evento
-      console.log('Dados do evento:', data);
-      toast.success('Evento criado com sucesso!');
+      // Mapeamento explícito de todos os campos usados
+      const payload = {
+        nome: data.nome,
+        descricao: data.descricao,
+        tipo: data.tipo,
+        local: data.local,
+        endereco: data.endereco,
+        cidade: data.cidade,
+        estado: data.estado,
+        cep: data.cep,
+        capacidadeMaxima: data.capacidadeMaxima,
+        publicoEsperado: data.publicoEsperado,
+        areaTotal: data.areaTotal,
+        areaConstruida: data.areaConstruida,
+        alturaMaxima: data.alturaMaxima,
+        emailContato: data.emailContato,
+        telefoneContato: data.telefoneContato,
+        website: data.website,
+        observacoes: data.observacoes,
+        dataInicio: data.dataInicio,
+        dataFim: data.dataFim,
+        // Configurações técnicas como objeto
+        configuracoesTecnicas: {
+          energiaRequerida: data.energiaRequerida,
+          aguaRequerida: data.aguaRequerida,
+          esgoto: data.esgoto,
+          ar_condicionado: data.arCondicionado,
+          aquecimento: data.aquecimento,
+          internet: data.internet,
+          som: data.som,
+          iluminacao_especial: data.iluminacaoEspecial,
+          estruturas_temporarias: data.estruturasTemporarias,
+        },
+      };
+      
+  
+      if (isEditMode && id) {
+        await apiService.updateEvento(id, payload);
+        toast.success('Evento atualizado com sucesso!');
+      } else {
+        await apiService.createEvento(payload);
+        toast.success('Evento criado com sucesso!');
+      }
       navigate('/eventos');
-    } catch (error) {
-      toast.error('Erro ao criar evento');
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message ||
+        (isEditMode ? 'Erro ao atualizar evento' : 'Erro ao criar evento')
+      );
     } finally {
       setIsLoading(false);
     }
   };
+  
+  
 
   const steps = [
     { id: 1, title: 'Informações Básicas', icon: FileText },
@@ -138,8 +217,8 @@ export function NovoEventoPage() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Novo Evento</h1>
-                <p className="text-gray-600">Crie um novo evento no EventCAD+</p>
+                <h1 className="text-3xl font-bold text-gray-900">{isEditMode ? 'Editar Evento' : 'Novo Evento'}</h1>
+                <p className="text-gray-600">{isEditMode ? 'Edite os dados do evento' : 'Crie um novo evento no EventCAD+'}</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -643,7 +722,7 @@ export function NovoEventoPage() {
                   ) : (
                     <Save className="w-4 h-4" />
                   )}
-                  <span>{isLoading ? 'Criando...' : 'Criar Evento'}</span>
+                  <span>{isLoading ? (isEditMode ? 'Salvando...' : 'Criando...') : (isEditMode ? 'Salvar Alterações' : 'Criar Evento')}</span>
                 </button>
               )}
             </div>

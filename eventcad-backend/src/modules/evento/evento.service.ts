@@ -504,6 +504,73 @@ export class EventoService {
     };
   }
 
+  /**
+   * Retorna estatísticas para o dashboard
+   */
+  async getDashboardStats(tenantId: string) {
+    const [
+      totalEventos,
+      eventosAtivos,
+      eventosAguardandoAprovacao,
+      eventosEmExecucao,
+      eventosConcluidos,
+      eventosCancelados,
+    ] = await Promise.all([
+      this.eventoRepository.count({ where: { tenantId, isActive: true } }),
+      this.eventoRepository.count({
+        where: {
+          tenantId,
+          isActive: true,
+          status: EventStatus.ONGOING,
+        },
+      }),
+      this.eventoRepository.count({
+        where: {
+          tenantId,
+          isActive: true,
+          status: EventStatus.AWAITING_APPROVAL,
+        },
+      }),
+      this.eventoRepository.count({
+        where: {
+          tenantId,
+          isActive: true,
+          status: EventStatus.ONGOING,
+        },
+      }),
+      this.eventoRepository.count({
+        where: {
+          tenantId,
+          isActive: true,
+          status: EventStatus.COMPLETED,
+        },
+      }),
+      this.eventoRepository.count({
+        where: {
+          tenantId,
+          isActive: true,
+          status: EventStatus.CANCELLED,
+        },
+      }),
+    ]);
+
+    return {
+      totalEventos,
+      eventosAtivos,
+      eventosAguardandoAprovacao,
+      eventosEmExecucao,
+      eventosConcluidos,
+      eventosCancelados,
+      // Placeholder para outras estatísticas que serão implementadas
+      totalPlantas: 0,
+      totalObjetos: 0,
+      objetosPendentes: 0,
+      objetosAprovados: 0,
+      jobsIA: 0,
+      jobsConcluidos: 0,
+    };
+  }
+
   // Métodos privados de validação e utilidade
 
   private async validateCreateData(

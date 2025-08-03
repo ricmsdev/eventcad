@@ -7,7 +7,7 @@ import {
   Trash2,
   Brain,
   Eye,
-
+  Edit,
   FileText,
   AlertCircle,
   CheckCircle,
@@ -204,6 +204,14 @@ export function PlantaDetalhesPage() {
           
           <button className="p-2 text-gray-600 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
             <Download className="h-5 w-5" />
+          </button>
+          
+          <button
+            onClick={() => navigate(`/plantas/${id}/editor`)}
+            className="p-2 text-gray-600 hover:text-green-600 rounded-lg hover:bg-green-50 transition-colors"
+            title="Abrir Editor"
+          >
+            <Edit className="h-5 w-5" />
           </button>
           
           <button

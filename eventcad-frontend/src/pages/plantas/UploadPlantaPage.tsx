@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
 import {
   Upload,
   MapPin,
@@ -28,7 +29,7 @@ import {
   Type,
   AlertCircle
 } from 'lucide-react';
-import { PlantaTipo } from '@/types';
+import { PlantaTipo, Evento } from '@/types';
 import { apiService } from '@/services/api';
 
 const isValidUUID = (str: string) => {
@@ -89,7 +90,7 @@ export function UploadPlantaPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [activeStep, setActiveStep] = useState(1);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [selectedEvento] = useState<any>(null);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
 
   const {
     register,
@@ -109,6 +110,23 @@ export function UploadPlantaPage() {
   });
 
   const watchedValues = watch();
+
+  // Buscar eventos para o dropdown
+  const { data: eventos } = useQuery({
+    queryKey: ['eventos', 'dropdown'],
+    queryFn: () => apiService.getEventos({ limit: 100 }).then(res => res.data),
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+
+  // Handler para seleção de evento
+  const handleEventoChange = (eventoId: string) => {
+    if (eventoId && eventos?.data) {
+      const evento = eventos.data.find(e => e.id === eventoId);
+      setSelectedEvento(evento || null);
+    } else {
+      setSelectedEvento(null);
+    }
+  };
 
   // Dropzone para upload de arquivos
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -757,11 +775,17 @@ export function UploadPlantaPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Evento (Opcional)
                 </label>
-                <select {...register('eventoId')} className="input-eventcad">
+                <select 
+                  {...register('eventoId')} 
+                  className="input-eventcad"
+                  onChange={(e) => handleEventoChange(e.target.value)}
+                >
                   <option value="">Selecione um evento...</option>
-                  <option value="evento-1">Feira de Tecnologia 2025</option>
-                  <option value="evento-2">Congresso de Engenharia</option>
-                  <option value="evento-3">Exposição de Arquitetura</option>
+                  {eventos?.data?.map((evento: Evento) => (
+                    <option key={evento.id} value={evento.id}>
+                      {evento.nome}
+                    </option>
+                  ))}
                 </select>
                 <p className="mt-1 text-sm text-gray-500">
                   Vincular a um evento permite melhor organização e controle

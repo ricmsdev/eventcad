@@ -43,34 +43,38 @@ EventCAD+ é uma plataforma completa para gestão, execução e automação de e
 
 ## Como rodar localmente
 
-### 1. Clone o repositório
+### Opção 1: Setup Automático (Recomendado)
 ```sh
-git clone <repo>
-cd EVENT CAD
+# Clone o repositório
+git clone https://github.com/ricmsdev/eventcad
+cd eventcad
+
+# Setup automático seguro
+# Linux/Mac
+./scripts/setup-secure.sh
+
+# Windows
+.\scripts\setup-secure.ps1
 ```
 
-### 2. Configure o ambiente
+### Opção 2: Setup Manual
 ```sh
-# Copie o arquivo de exemplo
+# 1. Clone o repositório
+git clone https://github.com/ricmsdev/eventcad
+cd eventcad
+
+# 2. Configure o ambiente
 cp env.example .env
-
-# Edite as variáveis de ambiente
 nano .env
-```
 
-### 3. Suba o ambiente com Docker
-```sh
+# 3. Suba o ambiente com Docker
 docker-compose up -d
-```
 
-### 4. Instale dependências (opcional para dev)
-```sh
+# 4. Instale dependências (opcional para dev)
 cd eventcad-backend && npm install
 cd ../eventcad-frontend && npm install
-```
 
-### 5. Rode as migrations e seeds
-```sh
+# 5. Rode as migrations e seeds
 cd eventcad-backend
 npm run db:reset
 npm run db:seed
@@ -96,8 +100,8 @@ npm run db:seed
 ```http
 POST /api/v1/auth/login
 {
-  "email": "admin@eventcad.com",
-  "password": "EventCAD@2025"
+  "email": "SEU_EMAIL_ADMIN",
+  "password": "SUA_SENHA_SEGURA"
 }
 ```
 

@@ -1,0 +1,39 @@
+version: '3.8'
+
+# Development overrides
+services:
+  backend:
+    build:
+      context: ./eventcad-backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./eventcad-backend:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+    command: npm run start:dev
+    ports:
+      - "9229:9229" # Debug port
+
+  frontend:
+    build:
+      context: ./eventcad-frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./eventcad-frontend:/app
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+    command: npm run dev
+    ports:
+      - "5173:5173" # Vite dev server
+
+  postgres:
+    ports:
+      - "5433:5432" # Different port to avoid conflicts
+    volumes:
+      - ./postgres-init:/docker-entrypoint-initdb.d
+
+  redis:
+    ports:
+      - "6380:6379" # Different port to avoid conflicts

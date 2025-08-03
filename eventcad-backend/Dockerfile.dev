@@ -1,0 +1,18 @@
+FROM node:18-alpine
+
+# Install development dependencies
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies)
+RUN npm install
+
+# Expose ports
+EXPOSE 3000 9229
+
+# Start in watch mode with debugging
+CMD ["npm", "run", "start:debug"]

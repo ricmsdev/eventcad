@@ -10,6 +10,37 @@ EventCAD+ é uma plataforma completa para gestão, execução e automação de e
 
 ---
 
+## 🔒 Segurança
+
+### Política de Segurança
+- **Vulnerabilidades:** Reporte via security@eventcad.com (NÃO abra issues públicos)
+- **Bug Bounty:** Disponível para pesquisadores de segurança
+- **Documentação:** [SECURITY.md](./SECURITY.md)
+
+### Verificação de Segurança
+```bash
+# Linux/Mac
+./scripts/security-check.sh
+
+# Windows
+.\scripts\security-check.ps1
+```
+
+### Configuração Segura
+1. **Copie o arquivo de exemplo:**
+   ```bash
+   cp env.example .env
+   ```
+
+2. **Configure as variáveis de ambiente:**
+   - JWT_SECRET (chave forte e única)
+   - DB_PASSWORD (senha forte)
+   - Outras credenciais sensíveis
+
+3. **NUNCA commite arquivos .env**
+
+---
+
 ## Como rodar localmente
 
 ### 1. Clone o repositório
@@ -18,25 +49,34 @@ git clone <repo>
 cd EVENT CAD
 ```
 
-### 2. Suba o ambiente com Docker
+### 2. Configure o ambiente
+```sh
+# Copie o arquivo de exemplo
+cp env.example .env
+
+# Edite as variáveis de ambiente
+nano .env
+```
+
+### 3. Suba o ambiente com Docker
 ```sh
 docker-compose up -d
 ```
 
-### 3. Instale dependências (opcional para dev)
+### 4. Instale dependências (opcional para dev)
 ```sh
 cd eventcad-backend && npm install
 cd ../eventcad-frontend && npm install
 ```
 
-### 4. Rode as migrations e seeds
+### 5. Rode as migrations e seeds
 ```sh
 cd eventcad-backend
 npm run db:reset
 npm run db:seed
 ```
 
-### 5. Acesse os sistemas
+### 6. Acesse os sistemas
 - **Frontend:** [http://localhost:8081](http://localhost:8081)
 - **Backend API:** [http://localhost:3000/api/v1](http://localhost:3000/api/v1)
 - **Documentação Swagger:** [http://localhost:3000/docs](http://localhost:3000/docs)
@@ -98,27 +138,65 @@ Content-Type: multipart/form-data
   ```sh
   npm run db:reset
   ```
-- **Stress test:**
+- **Verificação de segurança:**
   ```sh
-  k6 run ../stress-test-complete.js
+  # Linux/Mac
+  ./scripts/security-check.sh
+  
+  # Windows
+  .\scripts\security-check.ps1
   ```
 
 ---
 
-## Checklist de Deploy
-- [ ] Docker Compose configurado
-- [ ] Variáveis de ambiente (.env) revisadas
-- [ ] Banco migrado e seedado
-- [ ] Documentação acessível em `/docs`
-- [ ] Health check OK
-- [ ] Logs e monitoramento ativos
+## 🛡️ Medidas de Segurança Implementadas
+
+### Autenticação e Autorização
+- ✅ JWT com expiração configurável
+- ✅ Refresh tokens com rotação
+- ✅ Multi-tenancy com isolamento de dados
+- ✅ Role-based access control (RBAC)
+- ✅ Rate limiting por IP/usuário
+
+### Validação de Dados
+- ✅ Input validation com Zod
+- ✅ SQL injection protection (TypeORM)
+- ✅ XSS protection (helmet)
+- ✅ CORS configurado adequadamente
+
+### Configuração de Segurança
+- ✅ Variáveis de ambiente para credenciais
+- ✅ Secrets não commitados no git
+- ✅ HTTPS em produção
+- ✅ Headers de segurança configurados
+
+### Monitoramento
+- ✅ Logs estruturados
+- ✅ Health checks
+- ✅ Error tracking
+- ✅ Audit trails
 
 ---
 
-## Contato e Colaboração
-- **Time:** EventCAD+ Team — api@eventcad.com
-- **Contribua:** Pull requests e issues são bem-vindos!
-- **Dúvidas:** Consulte a documentação ou abra uma issue.
+## 🚨 Reportando Problemas
+
+### Vulnerabilidades de Segurança
+- **Email:** security@eventcad.com
+- **PGP Key:** [Disponível em breve]
+- **Response Time:** 24-48 horas
+
+### Bugs Gerais
+- Use o sistema de issues do GitHub
+- Inclua logs e passos para reproduzir
+- Não inclua informações sensíveis
+
+---
+
+## 📞 Suporte
+
+- **Documentação:** [SECURITY.md](./SECURITY.md)
+- **Issues:** [GitHub Issues](https://github.com/ricmsdev/eventcad/issues)
+- **Segurança:** security@eventcad.com
 
 ---
 

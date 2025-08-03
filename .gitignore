@@ -16,6 +16,21 @@ out/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.staging
+.env.backup
+*.env
+
+# Security files
+secrets/
+keys/
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+*.pub
 
 # IDE
 .vscode/
@@ -99,38 +114,20 @@ temp/
 *.sqlite
 *.db
 
-# Uploads
-uploads/
-public/uploads/
+# Backup files
+*.bak
+*.backup
+*.old
 
-# Cache
-.cache/
-.temp/
-
-# TypeScript
-*.tsbuildinfo
-
-# Testing
+# Test files
+test-results/
 coverage/
 .nyc_output/
 
-# Misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Local development
+.local/
+local/
 
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local env files
-.env*.local
-
-# Vercel
-.vercel
-
-# Turbo
-.turbo 
+# Sensitive data
+config/secrets.json
+config/credentials.json 

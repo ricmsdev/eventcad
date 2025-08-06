@@ -11,6 +11,7 @@ import {
   HttpStatus,
   Ip,
   Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -187,6 +188,11 @@ export class AuthController {
     description: 'Token inválido ou expirado',
   })
   async getProfile(@CurrentUser() user: any) {
+    // Verifica se o usuário existe
+    if (!user) {
+      throw new UnauthorizedException('Usuário não autenticado');
+    }
+
     // Remove campos sensíveis antes de retornar
     const {
       password,

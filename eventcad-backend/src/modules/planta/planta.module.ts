@@ -25,6 +25,6 @@ import { UploadModule } from '../upload/upload.module';
   ],
   controllers: [PlantaController],
   providers: [PlantaService],
-  exports: [PlantaService],
+  exports: [PlantaService, TypeOrmModule],
 })
 export class PlantaModule {}

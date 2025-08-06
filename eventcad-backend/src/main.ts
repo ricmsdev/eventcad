@@ -22,8 +22,22 @@ async function bootstrap() {
       logger: ['error', 'warn', 'log', 'debug', 'verbose'],
     });
 
+    // DEBUG: Listar todos os controllers carregados
+    const modules = app['container']?.getModules?.();
+    if (modules) {
+      console.log('--- Controllers carregados ---');
+      for (const [key, moduleRef] of modules) {
+        if (moduleRef.controllers) {
+          for (const [ctrlKey, ctrlRef] of moduleRef.controllers) {
+            console.log(`Controller: ${ctrlRef.metatype?.name} (module: ${key})`);
+          }
+        }
+      }
+      console.log('------------------------------');
+    }
+
     const configService = app.get(ConfigService);
-    const port = configService.get<number>('PORT', 3000);
+    const port = configService.get<number>('PORT', 3000); // Usar porta do ambiente ou 3000 como padrão
     const apiPrefix = configService.get<string>('API_PREFIX', 'api/v1');
     const corsOrigin = configService.get<string>(
       'CORS_ORIGIN',
@@ -146,16 +160,19 @@ async function bootstrap() {
       `,
     });
 
-    // Endpoint de health check
-    app.getHttpAdapter().get('/health', (req, res) => {
-      res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        version: '1.0.0',
-        environment: configService.get('NODE_ENV'),
-        uptime: process.uptime(),
-      });
-    });
+    // Health check endpoints são gerenciados pelo HealthController
+
+    // Debug: listar todas as rotas registradas
+    const server = app.getHttpAdapter().getInstance();
+    if (server._router && server._router.stack) {
+      console.log('Rotas registradas:');
+      server._router.stack
+        .filter((r) => r.route)
+        .forEach((r) => {
+          const methods = Object.keys(r.route.methods).join(',').toUpperCase();
+          console.log(`${methods} ${r.route.path}`);
+        });
+    }
 
     // Inicia o servidor
     await app.listen(port, '0.0.0.0');

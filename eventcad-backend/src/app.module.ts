@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -12,9 +13,13 @@ import { UploadModule } from './modules/upload/upload.module';
 import { PlantaModule } from './modules/planta/planta.module';
 import { AIRecognitionModule } from './modules/ai-recognition/ai-recognition.module';
 import { InfraObjectModule } from './modules/infra-object/infra-object.module';
+import { ChecklistModule } from './modules/checklist/checklist.module';
+import { RelatoriosModule } from './modules/relatorios/relatorios.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { TestController } from './test.controller';
 
 /**
  * Módulo principal da aplicação EventCAD+
@@ -30,28 +35,15 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
     // Configuração do banco de dados
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host:
-        process.env.NODE_ENV === 'test'
-          ? 'localhost'
-          : process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT || '5432'),
-      username: process.env.DATABASE_USERNAME || 'eventcad_user',
-      password: process.env.DATABASE_PASSWORD || 'eventcad_password',
-      database: process.env.DATABASE_NAME || 'eventcad_db',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'] as string[],
-      migrations: [__dirname + '/database/migrations/*{.ts,.js}'] as string[],
-      synchronize: process.env.NODE_ENV === 'test' ? false : true,
-      logging: true,
-      ssl: false,
-      retryAttempts: 3,
-      retryDelay: 3000,
-      autoLoadEntities: true,
-      extra: {
-        max: 20,
-        min: 5,
-        acquireTimeoutMillis: 60000,
-        idleTimeoutMillis: 600000,
-      },
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432'),
+      username: process.env.DB_USERNAME || 'eventcad_user',
+      password: process.env.DB_PASSWORD || 'eventcad_password',
+      database: process.env.DB_DATABASE || 'eventcad_dev',
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+      synchronize: process.env.NODE_ENV !== 'production',
+      logging: process.env.NODE_ENV !== 'production',
       namingStrategy: new SnakeNamingStrategy(),
     }),
 
@@ -63,6 +55,9 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
       },
     ]),
 
+    // Agendamento de tarefas
+    ScheduleModule.forRoot(),
+
     // Módulos da aplicação
     AuthModule,
     TenantModule,
@@ -71,8 +66,11 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
     PlantaModule,
     AIRecognitionModule,
     InfraObjectModule,
+    ChecklistModule,
+    RelatoriosModule,
+    MonitoringModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, TestController],
   providers: [
     AppService,
     {

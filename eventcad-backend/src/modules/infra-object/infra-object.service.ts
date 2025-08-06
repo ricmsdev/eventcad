@@ -63,13 +63,15 @@ export class InfraObjectService {
   ) {}
 
   /**
-   * Cria novo objeto de infraestrutura
+   * Cria novo objeto de infraestrutura com validações avançadas
    */
   async create(
     createDto: CreateInfraObjectDto,
     createdBy: string,
     tenantId: string,
   ): Promise<InfraObject> {
+    this.logger.log(`Criando objeto de infraestrutura: ${createDto.name}`);
+
     // Verificar se a planta existe
     const planta = await this.plantaRepository.findOne({
       where: { id: createDto.plantaId, tenantId, isActive: true },
@@ -98,6 +100,23 @@ export class InfraObjectService {
     // Calcular se precisa de revisão
     const confidence = createDto.confidence || 1.0;
     const requiresReview = needsReview(confidence, criticality);
+
+    // Validações avançadas de geometria
+    if (createDto.geometry) {
+      this.validateGeometry(createDto.geometry, planta);
+    }
+
+    // Verificar duplicatas próximas
+    const duplicates = await this.findNearbyDuplicates(
+      createDto.geometry,
+      createDto.objectType,
+      createDto.plantaId,
+      tenantId,
+    );
+
+    if (duplicates.length > 0) {
+      this.logger.warn(`Encontradas ${duplicates.length} duplicatas próximas`);
+    }
 
     // Criar objeto
     const infraObject = this.infraObjectRepository.create({
@@ -1018,5 +1037,238 @@ export class InfraObjectService {
     }
 
     return recommendations;
+  }
+
+  // Métodos avançados adicionados para o "Lord Lucifer"
+  private validateGeometry(geometry: any, planta: any): void {
+    if (!geometry.boundingBox) {
+      throw new BadRequestException('Geometria deve conter boundingBox');
+    }
+
+    const { x, y, width, height } = geometry.boundingBox;
+    
+    if (width <= 0 || height <= 0) {
+      throw new BadRequestException('Dimensões do objeto devem ser positivas');
+    }
+
+    // Validar se está dentro dos limites da planta
+    if (planta.dimensions) {
+      const { width: plantaWidth, height: plantaHeight } = planta.dimensions;
+      if (x < 0 || y < 0 || x + width > plantaWidth || y + height > plantaHeight) {
+        throw new BadRequestException('Objeto está fora dos limites da planta');
+      }
+    }
+  }
+
+  private async findNearbyDuplicates(
+    geometry: any,
+    objectType: string,
+    plantaId: string,
+    tenantId: string,
+    tolerance: number = 50, // pixels
+  ): Promise<InfraObject[]> {
+    if (!geometry?.center) return [];
+
+    const { x, y } = geometry.center;
+
+    return await this.infraObjectRepository
+      .createQueryBuilder('obj')
+      .where('obj.tenantId = :tenantId', { tenantId })
+      .andWhere('obj.plantaId = :plantaId', { plantaId })
+      .andWhere('obj.objectType = :objectType', { objectType })
+      .andWhere('obj.isActive = :isActive', { isActive: true })
+      .andWhere(
+        'ST_DWithin(ST_Point(obj.geometry->\'center\'->>\'x\', obj.geometry->\'center\'->>\'y\'), ST_Point(:x, :y), :tolerance)',
+        { x, y, tolerance }
+      )
+      .getMany();
+  }
+
+  private async processDuplicateConflicts(
+    newObject: InfraObject,
+    duplicates: InfraObject[],
+  ): Promise<void> {
+    for (const duplicate of duplicates) {
+      newObject.addConflict(
+        'duplicate',
+        [duplicate.id],
+        `Objeto duplicado detectado: ${duplicate.name}`,
+        'medium',
+        true,
+        'Revisar e decidir qual manter',
+      );
+    }
+
+    await this.infraObjectRepository.save(newObject);
+  }
+
+  private async notifyReviewRequired(object: InfraObject): Promise<void> {
+    // Implementar notificação para revisores
+    this.logger.log(`Notificação de revisão enviada para objeto: ${object.id}`);
+    
+    // Aqui você pode integrar com sistema de notificações
+    // await this.notificationService.sendReviewNotification(object);
+  }
+
+  // Métodos de analytics avançados
+  async getAdvancedAnalytics(tenantId: string, plantaId?: string) {
+    const queryBuilder = this.infraObjectRepository
+      .createQueryBuilder('obj')
+      .where('obj.tenantId = :tenantId', { tenantId })
+      .andWhere('obj.isActive = :isActive', { isActive: true });
+
+    if (plantaId) {
+      queryBuilder.andWhere('obj.plantaId = :plantaId', { plantaId });
+    }
+
+    const objects = await queryBuilder.getMany();
+
+    return {
+      totalObjects: objects.length,
+      byCategory: this.groupObjectsByField(objects, 'objectCategory'),
+      byStatus: this.groupObjectsByField(objects, 'status'),
+      byCriticality: this.groupObjectsByField(objects, 'criticality'),
+      averageConfidence: this.calculateAverageFromObjects(objects),
+      qualityAnalysis: this.analyzeQuality(objects),
+      recommendations: this.generateQualityRecommendations(objects),
+      recentActivity: await this.getRecentActivity(tenantId, plantaId),
+      performanceMetrics: await this.getPerformanceMetrics(tenantId, plantaId),
+    };
+  }
+
+  private async getRecentActivity(tenantId: string, plantaId?: string) {
+    const queryBuilder = this.infraObjectRepository
+      .createQueryBuilder('obj')
+      .where('obj.tenantId = :tenantId', { tenantId })
+      .andWhere('obj.isActive = :isActive', { isActive: true })
+      .orderBy('obj.updatedAt', 'DESC')
+      .limit(10);
+
+    if (plantaId) {
+      queryBuilder.andWhere('obj.plantaId = :plantaId', { plantaId });
+    }
+
+    return await queryBuilder.getMany();
+  }
+
+  private async getPerformanceMetrics(tenantId: string, plantaId?: string) {
+    const queryBuilder = this.infraObjectRepository
+      .createQueryBuilder('obj')
+      .where('obj.tenantId = :tenantId', { tenantId })
+      .andWhere('obj.isActive = :isActive', { isActive: true });
+
+    if (plantaId) {
+      queryBuilder.andWhere('obj.plantaId = :plantaId', { plantaId });
+    }
+
+    const objects = await queryBuilder.getMany();
+
+    return {
+      detectionAccuracy: this.calculateDetectionAccuracy(objects),
+      validationEfficiency: this.calculateValidationEfficiency(objects),
+      conflictResolutionRate: this.calculateConflictResolutionRate(objects),
+      averageProcessingTime: this.calculateAverageProcessingTime(objects),
+    };
+  }
+
+  private calculateDetectionAccuracy(objects: InfraObject[]): number {
+    const aiDetected = objects.filter(obj => obj.source === InfraObjectSource.AI_DETECTION);
+    const validated = aiDetected.filter(obj => obj.manuallyValidated);
+    return aiDetected.length > 0 ? (validated.length / aiDetected.length) * 100 : 0;
+  }
+
+  private calculateValidationEfficiency(objects: InfraObject[]): number {
+    const pendingValidation = objects.filter(obj => obj.requiresReview);
+    const validated = objects.filter(obj => obj.manuallyValidated);
+    const total = pendingValidation.length + validated.length;
+    return total > 0 ? (validated.length / total) * 100 : 0;
+  }
+
+  private calculateConflictResolutionRate(objects: InfraObject[]): number {
+    const withConflicts = objects.filter(obj => obj.conflicts && obj.conflicts.length > 0);
+    const resolved = withConflicts.filter(obj => 
+      obj.conflicts && obj.conflicts.every(conflict => conflict.resolvedAt)
+    );
+    return withConflicts.length > 0 ? (resolved.length / withConflicts.length) * 100 : 0;
+  }
+
+  private calculateAverageProcessingTime(objects: InfraObject[]): number {
+    const aiObjects = objects.filter(obj => obj.detectionMetadata);
+    if (aiObjects.length === 0) return 0;
+
+    const totalTime = aiObjects.reduce((sum, obj) => {
+      return sum + (obj.detectionMetadata?.processingTime || 0);
+    }, 0);
+
+    return totalTime / aiObjects.length;
+  }
+
+  // Métodos de automação avançada
+  async autoValidateObjects(tenantId: string, confidenceThreshold: number = 0.9) {
+    const highConfidenceObjects = await this.infraObjectRepository
+      .createQueryBuilder('obj')
+      .where('obj.tenantId = :tenantId', { tenantId })
+      .andWhere('obj.isActive = :isActive', { isActive: true })
+      .andWhere('obj.confidence >= :threshold', { threshold: confidenceThreshold })
+      .andWhere('obj.manuallyValidated = :validated', { validated: false })
+      .andWhere('obj.requiresReview = :review', { review: true })
+      .getMany();
+
+    let validatedCount = 0;
+    for (const object of highConfidenceObjects) {
+      object.markAsValidated('system-auto-validation');
+      object.status = InfraObjectStatus.APPROVED;
+      await this.infraObjectRepository.save(object);
+      validatedCount++;
+    }
+
+    this.logger.log(`Auto-validação concluída: ${validatedCount} objetos validados`);
+    return { validatedCount, totalProcessed: highConfidenceObjects.length };
+  }
+
+  async bulkUpdateObjects(
+    tenantId: string,
+    filterCriteria: any,
+    updateData: any,
+    updatedBy: string,
+  ) {
+    const queryBuilder = this.infraObjectRepository
+      .createQueryBuilder('obj')
+      .where('obj.tenantId = :tenantId', { tenantId })
+      .andWhere('obj.isActive = :isActive', { isActive: true });
+
+    // Aplicar critérios de filtro
+    if (filterCriteria.status) {
+      queryBuilder.andWhere('obj.status = :status', { status: filterCriteria.status });
+    }
+    if (filterCriteria.objectCategory) {
+      queryBuilder.andWhere('obj.objectCategory = :category', { category: filterCriteria.objectCategory });
+    }
+    if (filterCriteria.plantaId) {
+      queryBuilder.andWhere('obj.plantaId = :plantaId', { plantaId: filterCriteria.plantaId });
+    }
+
+    const objects = await queryBuilder.getMany();
+    let updatedCount = 0;
+
+    for (const object of objects) {
+      Object.assign(object, updateData);
+      object.lastModifiedBy = updatedBy;
+      object.updatedAt = new Date();
+      
+      object.addModification(
+        'bulk_update',
+        updatedBy,
+        {},
+        updateData,
+        'Atualização em lote',
+      );
+
+      await this.infraObjectRepository.save(object);
+      updatedCount++;
+    }
+
+    this.logger.log(`Atualização em lote concluída: ${updatedCount} objetos atualizados`);
+    return { updatedCount, totalProcessed: objects.length };
   }
 }

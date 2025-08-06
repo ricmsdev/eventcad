@@ -416,6 +416,89 @@ class ApiService {
   async getHealth(): Promise<AxiosResponse<any>> {
     return this.api.get('/health');
   }
+
+  // Checklists
+  async getChecklists(options?: any): Promise<AxiosResponse<PaginatedResponse<any>>> {
+    const params = options || {};
+    return this.api.get('/checklists', { params });
+  }
+
+  async getChecklist(id: string): Promise<AxiosResponse<any>> {
+    return this.api.get(`/checklists/${id}`);
+  }
+
+  async createChecklist(checklist: any): Promise<AxiosResponse<any>> {
+    return this.api.post('/checklists', checklist);
+  }
+
+  async updateChecklist(id: string, checklist: any): Promise<AxiosResponse<any>> {
+    return this.api.patch(`/checklists/${id}`, checklist);
+  }
+
+  async deleteChecklist(id: string): Promise<AxiosResponse<void>> {
+    return this.api.delete(`/checklists/${id}`);
+  }
+
+  // Relatórios
+  async getReports(options?: any): Promise<AxiosResponse<PaginatedResponse<any>>> {
+    const params = options || {};
+    return this.api.get('/relatorios/templates', { params });
+  }
+
+  async getReport(id: string): Promise<AxiosResponse<any>> {
+    return this.api.get(`/relatorios/templates/${id}`);
+  }
+
+  async createReport(report: any): Promise<AxiosResponse<any>> {
+    return this.api.post('/relatorios/templates', report);
+  }
+
+  async updateReport(id: string, report: any): Promise<AxiosResponse<any>> {
+    return this.api.patch(`/relatorios/templates/${id}`, report);
+  }
+
+  async deleteReport(id: string): Promise<AxiosResponse<void>> {
+    return this.api.delete(`/relatorios/templates/${id}`);
+  }
+
+  async executeReport(id: string, options?: any): Promise<AxiosResponse<any>> {
+    return this.api.post(`/relatorios/templates/${id}/execute`, options);
+  }
+
+  async exportReport(id: string, format: string): Promise<AxiosResponse<any>> {
+    return this.api.post(`/relatorios/templates/${id}/export`, { format });
+  }
+
+  // Usuários
+  async getUsers(options?: any): Promise<AxiosResponse<PaginatedResponse<User>>> {
+    const params = options || {};
+    return this.api.get('/auth/users', { params });
+  }
+
+  async getUser(id: string): Promise<AxiosResponse<User>> {
+    return this.api.get(`/auth/users/${id}`);
+  }
+
+  // Métodos genéricos para compatibilidade
+  async get(url: string, config?: any): Promise<AxiosResponse<any>> {
+    return this.api.get(url, config);
+  }
+
+  async post(url: string, data?: any, config?: any): Promise<AxiosResponse<any>> {
+    return this.api.post(url, data, config);
+  }
+
+  async put(url: string, data?: any, config?: any): Promise<AxiosResponse<any>> {
+    return this.api.put(url, data, config);
+  }
+
+  async patch(url: string, data?: any, config?: any): Promise<AxiosResponse<any>> {
+    return this.api.patch(url, data, config);
+  }
+
+  async delete(url: string, config?: any): Promise<AxiosResponse<any>> {
+    return this.api.delete(url, config);
+  }
 }
 
 // Instância singleton do serviço de API
